@@ -1,6 +1,3 @@
-.App {
-    background: #223;
-}
 
 /* force scrollbar, prevents initial gap */
 html { overflow-y: scroll; }
@@ -16,4 +13,3 @@ html { overflow-y: scroll; }
     display: block;
     clear: both;
  }
-

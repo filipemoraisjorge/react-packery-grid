@@ -1,18 +1,121 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 
 class App extends Component {
+
+
+  minWidth = 150;
+  oneWidth;
+
+  setWidth = () => {
+    const containerWidth = document.getElementById('root').offsetWidth;
+    const noOfOneColumns = containerWidth / this.minWidth;
+    this.oneWidth = containerWidth / Math.floor(noOfOneColumns);
+  };
+
+  styles = () => {
+    const oneWidth = this.oneWidth;
+    const itemStyles = {
+      gridItem: {},
+      gridItem1x1: {
+        width: `${oneWidth}px`,
+        height: `${oneWidth}px`,
+      },
+      gridItem2x1: {
+        width: `${2 * oneWidth}px`,
+        height: `${oneWidth}px`,
+      },
+      gridItem1x2: {
+        width: `${oneWidth}px`,
+        height: `${2 * oneWidth}px`,
+      },
+      gridItem2x2: {
+        width: `${2 * oneWidth}px`,
+        height: `${2 * oneWidth}px`,
+      },
+    };
+
+    return itemStyles;
+  };
+
+  componentDidMount() {
+
+
+    const Packery = require('packery');
+    const grid = document.getElementById('grid');
+    const pckry = new Packery(grid, {
+      itemSelector: '.gridItem',
+      gutter: 0,
+    });
+
+    window.onresize = () => {
+      this.setWidth();
+      const formats = ['gridItem1x1', 'gridItem2x2', 'gridItem1x2', 'gridItem2x1']
+      formats.forEach(format => {
+        const formatElements = document.getElementsByClassName(format);
+        if (formatElements !== null) {
+          for (const elem of formatElements) {
+            elem.style.width = this.styles()[format].width;
+            elem.style.height = this.styles()[format].height;
+          }
+        }
+      });
+    };
+
+/*
+     pckry.on('layoutComplete', (items) => {
+      this.setWidth();
+      const formats = ['gridItem1x1', 'gridItem2x2', 'gridItem1x2', 'gridItem2x1']
+      items.forEach(item => {
+        const elem = item.element;
+        formats.forEach(format => {
+          if (elem.className.includes(format)) {
+            elem.style.width = this.styles()[format].width;
+            elem.style.height = this.styles()[format].height;
+          }
+        })
+      });
+    });
+ */
+  }
+
+
   render() {
+    const random = (min, max) => {
+      return min + Math.round(Math.random() * (max - min));
+    }
+
+    const randomizeItems = (array, qtyItems) => {
+      for (let i = 0; i < qtyItems; i++) {
+        array.push({
+          text: `${i}`,
+          w: random(1, 2),
+          h: random(1, 2),
+        });
+      }
+      return array;
+    }
+
+    const randomItems = randomizeItems([], 10);
+    this.setWidth();
+
     return (
       <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+        <div id="grid">
+          <div className="gutterSizer"></div>
+          <div className="gridSizer"></div>
+
+          {randomItems.map((item, idx) => {
+            const style = this.styles()[`gridItem${item.w}x${item.h}`];
+            const className = `gridItem gridItem${item.w}x${item.h}`
+            return (
+              <div key={idx} className={className} style={style} >
+                <p>item {item.text}</p>
+                <p>{item.w}x{item.h}</p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   }
