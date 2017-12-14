@@ -7,7 +7,6 @@ html { overflow-y: scroll; }
 
 .gridItem {
     float: left;
-    background: lightblue;
 }
 
   /* clear fix */

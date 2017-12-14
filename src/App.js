@@ -3,7 +3,6 @@ import './App.css';
 
 class App extends Component {
 
-
   minWidth = 150;
   oneWidth;
 
@@ -20,27 +19,44 @@ class App extends Component {
       gridItem1x1: {
         width: `${oneWidth}px`,
         height: `${oneWidth}px`,
+        background: 'lightblue'
       },
       gridItem2x1: {
         width: `${2 * oneWidth}px`,
         height: `${oneWidth}px`,
+        background: 'lightpink'
       },
       gridItem1x2: {
         width: `${oneWidth}px`,
         height: `${2 * oneWidth}px`,
+        background: 'lightgreen'
       },
       gridItem2x2: {
         width: `${2 * oneWidth}px`,
         height: `${2 * oneWidth}px`,
+        background: 'lightyellow'
       },
     };
 
     return itemStyles;
   };
 
+  resizeItems = () => {
+    this.setWidth();
+    const formats = ['gridItem1x1', 'gridItem2x2', 'gridItem1x2', 'gridItem2x1']
+    formats.forEach(format => {
+      const formatElements = document.getElementsByClassName(format);
+      if (formatElements !== null) {
+        for (const elem of formatElements) {
+          elem.style.width = this.styles()[format].width;
+          elem.style.height = this.styles()[format].height;
+        }
+      }
+    });
+  };
+
+
   componentDidMount() {
-
-
     const Packery = require('packery');
     const grid = document.getElementById('grid');
     const pckry = new Packery(grid, {
@@ -48,35 +64,25 @@ class App extends Component {
       gutter: 0,
     });
 
-    window.onresize = () => {
-      this.setWidth();
-      const formats = ['gridItem1x1', 'gridItem2x2', 'gridItem1x2', 'gridItem2x1']
-      formats.forEach(format => {
-        const formatElements = document.getElementsByClassName(format);
-        if (formatElements !== null) {
-          for (const elem of formatElements) {
-            elem.style.width = this.styles()[format].width;
-            elem.style.height = this.styles()[format].height;
-          }
-        }
-      });
-    };
 
-/*
-     pckry.on('layoutComplete', (items) => {
-      this.setWidth();
-      const formats = ['gridItem1x1', 'gridItem2x2', 'gridItem1x2', 'gridItem2x1']
-      items.forEach(item => {
-        const elem = item.element;
-        formats.forEach(format => {
-          if (elem.className.includes(format)) {
-            elem.style.width = this.styles()[format].width;
-            elem.style.height = this.styles()[format].height;
-          }
-        })
-      });
-    });
- */
+
+    window.addEventListener('resize', this.resizeItems);
+
+    /*
+         pckry.on('layoutComplete', (items) => {
+          this.setWidth();
+          const formats = ['gridItem1x1', 'gridItem2x2', 'gridItem1x2', 'gridItem2x1']
+          items.forEach(item => {
+            const elem = item.element;
+            formats.forEach(format => {
+              if (elem.className.includes(format)) {
+                elem.style.width = this.styles()[format].width;
+                elem.style.height = this.styles()[format].height;
+              }
+            })
+          });
+        });
+     */
   }
 
 
@@ -96,15 +102,12 @@ class App extends Component {
       return array;
     }
 
-    const randomItems = randomizeItems([], 10);
+    const randomItems = randomizeItems([], 100);
     this.setWidth();
 
     return (
       <div className="App">
-        <div id="grid">
-          <div className="gutterSizer"></div>
-          <div className="gridSizer"></div>
-
+        <div id="grid" style={this.styles()['grid']} >
           {randomItems.map((item, idx) => {
             const style = this.styles()[`gridItem${item.w}x${item.h}`];
             const className = `gridItem gridItem${item.w}x${item.h}`
@@ -120,5 +123,8 @@ class App extends Component {
     );
   }
 }
+
+
+
 
 export default App;
