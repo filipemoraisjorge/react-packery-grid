@@ -22,7 +22,7 @@ class App extends Component {
   };
 
   styles = () => {
-    const aspectRatio = 8 / 9;
+    const aspectRatio =  1/1
     const baseOneWidth = this.oneWidth;
     const oneWidth = baseOneWidth;
     const oneHeight = baseOneWidth / aspectRatio;
@@ -179,7 +179,6 @@ class App extends Component {
 // N milliseconds. If `immediate` is passed, trigger the function on the
 // leading edge, instead of the trailing.
 function debounce(func, wait, immediate) {
-
   var timeout;
   return function () {
     var context = this, args = arguments;
@@ -187,7 +186,6 @@ function debounce(func, wait, immediate) {
     timeout = setTimeout(function () {
       timeout = null;
       if (!immediate) {
-        // console.log('apply');
         func.apply(context, args);
       }
     }, wait);
