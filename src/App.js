@@ -9,40 +9,45 @@ class App extends Component {
   noOfOneColumns;
   pckry;
 
+  constructor(props) {
+    super(props);
+    this.addItem = this.addItem.bind(this);
+  }
+
   setWidth = () => {
     let containerWidth = this.containerWidth = document.getElementById('grid').offsetWidth;
     this.noOfOneColumns = Math.floor(containerWidth / this.minWidth);
-    this.oneWidth = Math.floor(containerWidth / this.noOfOneColumns);
+    this.oneWidth = containerWidth / this.noOfOneColumns;
     console.log('setWidth', containerWidth, this.noOfOneColumns, this.oneWidth);
   };
 
   styles = () => {
-    const aspectRatio = 1 / 1;
+    const aspectRatio = 8 / 9;
     const baseOneWidth = this.oneWidth;
-    const oneWidth = baseOneWidth * aspectRatio;
-    const oneHeight = baseOneWidth;
+    const oneWidth = baseOneWidth;
+    const oneHeight = baseOneWidth / aspectRatio;
 
     const itemStyles = {
       gridItem: {},
       gridItem1x1: {
         width: `${oneWidth}px`,
         height: `${oneHeight}px`,
-        background: 'lightblue'
+        background: '#223'
       },
       gridItem2x1: {
         width: `${2 * oneWidth}px`,
         height: `${oneHeight}px`,
-        background: 'lightpink'
+        background: '#334'
       },
       gridItem1x2: {
         width: `${oneWidth}px`,
         height: `${2 * oneHeight}px`,
-        background: 'lightgreen'
+        background: '#445'
       },
       gridItem2x2: {
         width: `${2 * oneWidth}px`,
         height: `${2 * oneHeight}px`,
-        background: 'lightyellow'
+        background: '#556'
       },
     };
 
@@ -76,62 +81,44 @@ class App extends Component {
 
 
   componentDidMount() {
-    this.setWidth();
     this.resizeItems(true);
     const Packery = require('packery');
     const grid = document.getElementById('grid');
     this.pckry = new Packery(grid, {
       itemSelector: '.gridItem',
       // disable window resize behavior
-      resize: false,
-      stagger: 50,
+      shiftResize: true,
+      resize: true,
       gutter: 0,
+      stagger: 0
     });
 
-
-
     window.addEventListener('resize', this.resizeItems);
-    /*
-         pckry.on('layoutComplete', (items) => {
-          this.setWidth();
-          const formats = ['gridItem1x1', 'gridItem2x2', 'gridItem1x2', 'gridItem2x1']
-          items.forEach(item => {
-            const elem = item.element;
-            formats.forEach(format => {
-              if (elem.className.includes(format)) {
-                elem.style.width = this.styles()[format].width;
-                elem.style.height = this.styles()[format].height;
-              }
-            })
-          });
-        });
-     */
+
+    // show all items;
+    this.pckry.once('layoutComplete', function (laidOutItems) {
+      laidOutItems.forEach(item => {
+        const elem = item.element;
+        elem.style.opacity = 1;
+      });
+    });
+
   }
 
 
   render() {
-    const random = (min, max) => {
-      return min + Math.round(Math.random() * (max - min));
-    }
-
-    const randomizeItems = (array, qtyItems) => {
-      for (let i = 0; i < qtyItems; i++) {
-        array.push({
-          text: `${i}`,
-          w: random(1, 2),
-          h: random(1, 2),
-        });
-      }
-      return array;
-    }
-
-    const randomItems = randomizeItems([], 24);
+    const randomItems = this.randomizeItems([], 30);
 
     return (
-      <div className="App">
+      <div className="App" >
+        <header>
+          <button onClick={this.addItem}>Add Item</button>
+          <hr />
+        </header>
         <div id="grid" style={this.styles()['grid']} >
           {randomItems.map((item, idx) => {
             const style = this.styles()[`gridItem${item.w}x${item.h}`];
+            style.opacity = 0;
             const className = `gridItem gridItem${item.w}x${item.h}`;
             return (
               <div key={idx} className={className} style={style} >
@@ -144,7 +131,47 @@ class App extends Component {
       </div>
     );
   }
+
+  addItem() {
+    const item = this.randomizeItems([], 1)[0];
+    const elem = document.createElement('div');
+    const style = this.styles()[`gridItem${item.w}x${item.h}`];
+    const className = `gridItem gridItem${item.w}x${item.h}`;
+
+    elem.style.width = style.width;
+    elem.style.height = style.height;
+    elem.style.background = style.background;
+
+    elem.className = className;
+    elem.innerHTML = `
+      <p>item ${item.text}</p>
+      <p>${item.w}x${item.h}</p>
+    `;
+
+    const grid = document.getElementById('grid');
+    const fragment = document.createDocumentFragment()
+    fragment.appendChild(elem);
+    grid.insertBefore(fragment, grid.firstChild);
+
+    this.pckry.prepended(elem);
+  }
+
+  random = (min, max) => {
+    return min + Math.round(Math.random() * (max - min));
+  }
+
+  randomizeItems = (array, qtyItems) => {
+    for (let i = 0; i < qtyItems; i++) {
+      array.push({
+        text: `${i}`,
+        w: this.random(1, 2),
+        h: this.random(1, 2),
+      });
+    }
+    return array;
+  }
 }
+
 
 // source: https://gist.github.com/nmsdvid/8807205
 // Returns a function, that, as long as it continues to be invoked, will not
