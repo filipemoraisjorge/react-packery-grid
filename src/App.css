@@ -12,12 +12,22 @@ body {
 html { overflow-y: scroll; }
 
 .gridItem {
+    box-sizing: border-box;
     float: left;
-    transition: opacity 0.5s;
+    border: 1px dotted #333;
+    transition: opacity 0.5s;   
+}
+
+.sticky {
+    box-sizing: border-box;    
+    float: left;
+    border: 1px dotted #400;
+    
+    background: #944 !important;
 }
 
   /* clear fix */
-.grid:after {
+grid:after {
     content: '';
     display: block;
     clear: both;
