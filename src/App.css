@@ -26,6 +26,15 @@ html { overflow-y: scroll; }
     background: #944 !important;
 }
 
+.advert {
+    box-sizing: border-box;    
+    float: left;
+    border: 1px dotted rgb(18, 44, 34);
+    
+    background: #449977 !important;
+}
+
+
   /* clear fix */
 grid:after {
     content: '';

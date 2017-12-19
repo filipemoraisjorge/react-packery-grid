@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './App.css';
+import ItemsArray from './ItemsArray';
 
 class App extends Component {
 
@@ -8,20 +9,19 @@ class App extends Component {
   oneWidth;
   noOfOneColumns;
   pckry;
-  randomItems;
+  randomItems = new ItemsArray();
 
   constructor(props) {
     super(props);
-    this.addItem = this.addItem.bind(this);
+    this.addItemButton = this.addItemButton.bind(this);
     this.addSticky = this.addSticky.bind(this);
-
   }
 
   setWidth = () => {
     let containerWidth = this.containerWidth = document.getElementById('grid').offsetWidth;
     this.noOfOneColumns = Math.floor(containerWidth / this.minWidth);
     this.oneWidth = containerWidth / this.noOfOneColumns;
-    console.log('setWidth', containerWidth, this.noOfOneColumns, this.oneWidth);
+    //console.log('setWidth', containerWidth, this.noOfOneColumns, this.oneWidth);
   };
 
   styles = () => {
@@ -66,6 +66,7 @@ class App extends Component {
     const bigChange = Math.abs(prevContainerWidth - this.containerWidth) >= 100;
 
     debounce(() => {
+
       const formats = ['gridItem1x1', 'gridItem2x2', 'gridItem1x2', 'gridItem2x1'];
       if (forceResize || prevOneWidth !== this.oneWidth || prevNoOfOneColumns !== this.noOfOneColumns) {
         for (const format of formats) {
@@ -79,11 +80,13 @@ class App extends Component {
         }
 
 
-        this.placeStickiesElements();
         this.pckry.layout();
 
       }
     }, forceResize || bigChange ? 0 : 250)();
+
+    this.placeStickiesElements();
+
   };
 
   placeStickiesElements = () => {
@@ -99,7 +102,7 @@ class App extends Component {
     const col = this.getStickyColumn(item.w, item.columnPercentage) - 1;
     const xCol = (col * this.oneWidth);
     const yRow = (item.row - 1) * this.oneWidth;
-    console.log('sticky', item.id, item.columnPercentage, '%', 'col', col, 'xcol:', xCol, 'row', item.row, 'yRow', yRow);
+    // console.log('sticky', item.id, item.columnPercentage, '%', 'col', col, 'xcol:', xCol, 'row', item.row, 'yRow', yRow);
     const elem = document.getElementById(item.id);
     elem.style.position = 'absolute';
     elem.style.top = `${yRow}px`;
@@ -128,7 +131,6 @@ class App extends Component {
       shiftResize: true,
       resize: true,
       gutter: 0,
-      stagger: 50
     });
     this.resizeItems(true);
 
@@ -145,14 +147,14 @@ class App extends Component {
   }
 
   render() {
-    let randomItems = this.randomizeItems([], 50);
-    randomItems = this.mockStickyItems(randomItems, 5);
+    let randomItems = this.randomizeItems(this.randomItems, 50);
+    randomItems = this.randomizeStickyItems(randomItems, 3);
     this.randomItems = randomItems;
     return (
       <div className="App" >
         <header>
-          <button onClick={this.addItem}>Add Item</button>
-          <button onClick={this.addSticky}>Add sticky C: 33% R: 2</button>
+          <button onClick={this.addItemButton}>Add Item</button>
+          <button onClick={this.addSticky}>Add Random Sticky</button>
 
           <hr />
         </header>
@@ -161,7 +163,7 @@ class App extends Component {
             const style = this.styles()[`gridItem${item.w}x${item.h}`];
             //style.opacity = 0;
             const stickyColumn = item.columnPercentage ? this.getStickyColumn(item.w, item.columnPercentage) : null;
-            const className = `gridItem${item.w}x${item.h} ${item.columnPercentage ? 'sticky' : 'gridItem'}`;
+            const className = `gridItem${item.w}x${item.h} ${item.sticky ? 'sticky' : 'gridItem'} ${item.advert ? 'advert' : ''}`;
 
             return (
               <div id={idx} key={idx} className={className} style={style} >
@@ -184,14 +186,17 @@ class App extends Component {
    * 
    */
 
-  addItem() {
-    const item = this.randomizeItems([], 1)[0];
+  addItemButton() {
+    this.addItem(this.randomizeItems([], 1)[0])
+  }
+
+  addItem(item) {
     const elem = this.insertItemOnGridDOM(item);
     this.pckry.prepended(elem);
   }
 
   addSticky(colPercent, row) {
-    const item = this.mockStickyItems([], 1)[0];
+    const item = this.randomizeStickyItems([], 1)[0];
     item.columnPercentage = this.random(0, 100);
     item.row = this.random(1, 5);
     this.insertItemOnGridDOM(item);
@@ -199,14 +204,32 @@ class App extends Component {
     this.pckry.layout();
   }
 
+  addAdvert(toDom = true) {
+    const advert = {
+      id: this.randomItems.length,
+      text: `ad${this.randomItems.length}`,
+      w: this.random(1, 2),
+      h: this.random(1, 2),
+      advert: true
+    };
+    if (toDom) {
+      this.addItem(advert);
+    }
+    return advert;
+  }
+
   insertItemOnGridDOM(item) {
     item.id = this.randomItems.length;
-    this.randomItems.push(item);
+    let itsTimeForAnAdvert = this.randomItems.push(item);
+    if (itsTimeForAnAdvert) {
+      this.addAdvert();
+    }
 
     const elem = document.createElement('div');
     const style = this.styles()[`gridItem${item.w}x${item.h}`];
     const itemType = item.sticky ? 'sticky' : 'gridItem';
-    const className = `${itemType} gridItem${item.w}x${item.h}`;
+    const advert = item.advert ? 'advert' : '';
+    const className = `${itemType} gridItem${item.w}x${item.h} ${advert}`;
 
     elem.style.width = style.width;
     elem.style.height = style.height;
@@ -215,9 +238,9 @@ class App extends Component {
     elem.id = item.id;
     elem.className = className;
     elem.innerHTML = `
-      <p>${itemType} ${item.id}</p>
+      <p>${itemType} ${item.id} ${advert}</p>
       <p>${item.w}x${item.h}</p>
-      ${itemType === 'sticky' ? `<p>col ${item.columnPercentage}% row ${item.row}</p>` : ''}
+      ${item.sticky ? `<p>col ${item.columnPercentage}% row ${item.row}</p>` : ''}
     `;
 
     const grid = document.getElementById('grid');
@@ -234,22 +257,25 @@ class App extends Component {
 
   randomizeItems = (array, qtyItems) => {
     for (let i = 0; i < qtyItems; i++) {
-      array.push({
+      let itsTimeForAnAdvert = array.push({
         id: i,
         text: `${i}`,
         w: this.random(1, 2),
         h: this.random(1, 2),
       });
+      if (itsTimeForAnAdvert) {
+        array.push (this.addAdvert(false));
+      }
     }
     return array;
   }
 
-  mockStickyItems = (array, qtyItems) => {
+  randomizeStickyItems = (array, qtyItems) => {
     const start = array.length;
 
     for (let i = start; i < start + qtyItems; i++) {
       const columnPercentage = this.random(0, 100);
-      const row = this.random(1, qtyItems);
+      const row = this.random(1, qtyItems*2);
       array.push({
         id: i,
         sticky: true,
