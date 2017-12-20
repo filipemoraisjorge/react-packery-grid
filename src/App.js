@@ -15,9 +15,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.addItemButton = this.addItemButton.bind(this);
-    this.addStickyButton = this.addStickyButton.bind(this);
     this.fitStickyButton = this.fitStickyButton.bind(this);
-    this.moveItemButton = this.moveItemButton.bind(this);
   }
 
   setWidth = () => {
@@ -27,7 +25,6 @@ class App extends Component {
     this.oneHeight = this.oneWidth / this.aspectRatio;
     this.pckry.columnWidth = this.oneWidth;
     this.pckry.rowHeight = this.oneHeight;
-    // console.log('width', this.oneWidth, this.oneHeight);
   };
 
   styles = () => {
@@ -68,9 +65,7 @@ class App extends Component {
     const forceResize = event === true;
     this.setWidth();
     const bigChange = Math.abs(prevContainerWidth - this.containerWidth) >= 100;
-
     debounce(() => {
-
       const formats = ['gridItem1x1', 'gridItem2x2', 'gridItem1x2', 'gridItem2x1'];
       if (forceResize || prevOneWidth !== this.oneWidth || prevNoOfOneColumns !== this.noOfOneColumns) {
         for (const format of formats) {
@@ -82,70 +77,32 @@ class App extends Component {
             }
           }
         }
-
-
         this.pckry.layout();
-
       }
     }, forceResize || bigChange ? 0 : 250)();
-
-    this.placeStickiesElements();
-  
   };
 
   addItem(item) {
     this.randomItems.forEach((item) => { if (item.fit) { return item.fitted = false } });
     const elem = this.insertItemOnGridDOM(item);
     this.pckry.prepended(elem);
+    // re fit stickies in place
     this.placeFitStickiesElements();
     this.pckry.layout();
-    
   }
-
-  placeStickiesElements = () => {
-    //place stickies
-    for (const item of this.randomItems) {
-      if (item.sticky) {
-        this.placeSticky(item);
-      }
-    }
-
-  };
-
-  placeSticky = (item) => {
-    const col = this.getStickyColumn(item.w, item.columnPercentage) - 1;
-    const xCol = (col * this.oneWidth);
-    const yRow = (item.row - 1) * this.oneWidth;
-    const elem = document.getElementById(item.id);
-    elem.style.position = 'absolute';
-    elem.style.top = `${yRow}px`;
-    elem.style.left = `${xCol}px`;
-    this.pckry.stamp(elem);
-  };
-
 
   fitSticky = (item, elem) => {
     const col = this.getStickyColumn(item.w, item.columnPercentage) - 1;
     const xCol = (col * this.oneWidth);
     const yRow = (item.row - 1) * this.oneHeight;
     // if is not in pckry, add it
-
-    const packeryElemIndex = this.pckry.getItemElements().findIndex((packeryElem) => {
-      // console.log('exits?', elem.id, packeryElem.id);
-      return elem.id === packeryElem.id;
-    });
-
-    console.log('found item', item.id, 'elem', elem.id, 'pckry', packeryElemIndex);
-
+    const packeryElemIndex = this.pckry.getItemElements().findIndex(packeryElem => elem.id === packeryElem.id);
     if (packeryElemIndex === -1) {
-      console.log('add fit', item.id);
       this.pckry.addItems(elem);
     }
-
-    // if not already in place
+    // if not in place, fit it in.
     if (!item.fitted) {
-      this.randomItems.find(it => it.id === item.id).fitted = true;
-      console.log('will fit', item.id, item.fitted, this.randomItems);
+      item.fitted = true;
       this.pckry.fit(elem, xCol, yRow);
       this.pckry.shiftLayout();
     }
@@ -153,16 +110,13 @@ class App extends Component {
 
 
   placeFitStickiesElements = () => {
-    const elements = document.getElementById('grid').childNodes;
-    // const elements = this.pckry.getItemElements();
+    //const elements = document.getElementById('grid').childNodes;
+    const elements = this.pckry.getItemElements();
     for (const elem of elements) {
       if (elem && elem.className.includes('fit')) {
         const item = this.randomItems.find(item => item.id === parseInt(elem.id, 10));
-        // this.fitSticky(item, elem);
         if (!item.fitted) {
-          console.log('will re-fit', item.id);
           this.fitSticky(item, elem);
-          // this.pckry.layout();
         }
       }
     }
@@ -184,21 +138,23 @@ class App extends Component {
     const grid = document.getElementById('grid');
     this.pckry = new Packery(grid, {
       itemSelector: '.gridItem',
+      // disable the first layout so we can adjusts the size of the columns.
       initLayout: false,
       // disable window resize behavior
       shiftResize: true,
       resize: true,
       gutter: 0
-
     });
+
     this.resizeItems(true);
 
     window.addEventListener('resize', this.resizeItems);
 
     // show item order after layout
+ /* 
     this.pckry.on('layoutComplete', () => {
       this.pckry.getItemElements().forEach((itemElem, i) => {
-        itemElem.textContent = `${ /*itemElem.textContent*/""} ${i + 1}`;
+        itemElem.textContent = `${i + 1}`;
       });
     });
 
@@ -209,7 +165,7 @@ class App extends Component {
         elem.style.opacity = 1;
       }
     });
-
+ */
   }
 
 
@@ -221,10 +177,7 @@ class App extends Component {
       <div className="App" >
         <header>
           <button onClick={this.addItemButton}>Add Item</button>
-          <button onClick={this.addStickyButton}>Add Random Sticky</button>
           <button onClick={this.fitStickyButton}>Fit Sticky</button>
-          <button onClick={this.moveItemButton}>Move 5 to 3</button>
-
           <hr />
         </header>
         <div id="grid" style={this.styles()['grid']} >
@@ -259,35 +212,16 @@ class App extends Component {
     this.addItem(this.randomizeItems([], 1)[0]);
   }
 
-  addStickyButton() {
-    const item = this.randomizeStickyItems([], 1)[0];
-    item.columnPercentage = this.random(0, 100);
-    item.row = this.random(1, 5);
-    this.insertItemOnGridDOM(item);
-    this.placeSticky(item);
-    this.pckry.layout();
-  }
-
   fitStickyButton() {
     const item = this.randomizeItems([], 1)[0];
     item.columnPercentage = this.random(0, 100);
     item.row = this.random(1, 5);
     item.fit = true;
+    // TODO this 2 lines should be extracted to method fitItem(item), but this.insertItemOnGridDOM should refactor to findOrInsertOnDOM
     const elem = this.insertItemOnGridDOM(item);
     this.fitSticky(item, elem);
     this.pckry.layout();
   }
-
-  moveItemButton() {
-    const divGrid = document.getElementById('grid');
-    const divElem = divGrid.childNodes.item(4);
-    divGrid.removeChild(divElem);
-    divGrid.insertBefore(divElem, divGrid.childNodes.item(3));
-    this.pckry.reloadItems();
-    this.pckry.layout();
-  }
-
-
 
   addAdvert(toDom = true) {
     const advert = {
@@ -327,6 +261,8 @@ class App extends Component {
       <p>${itemType} ${item.id} ${advert}</p>
       <p>${item.w}x${item.h}</p>
       ${item.sticky ? `<p>col ${item.columnPercentage}% row ${item.row}</p>` : ''}
+      ${item.fit ? `<p>col ${item.columnPercentage}% row ${item.row}</p>` : ''}
+      
     `;
 
     const grid = document.getElementById('grid');
