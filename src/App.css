@@ -15,7 +15,24 @@ html { overflow-y: scroll; }
     box-sizing: border-box;
     float: left;
     border: 1px dotted #333;
-    transition: opacity 0.5s;   
+    font-family: 'Futura LT Medium';
+    padding: 10px;
+}
+
+.gridItem1x1 {
+    background: #235
+}
+
+.gridItem2x1 {
+    background: #247
+}
+
+.gridItem1x2 {
+    background: #458
+}
+
+.gridItem2x2 {
+    background: #125
 }
 
 .sticky {
